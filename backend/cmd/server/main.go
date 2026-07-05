@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"quota/internal/config"
 	"quota/internal/db"
@@ -21,8 +22,11 @@ func main() {
 	}
 
 	// Seed demo data on first run so the app is explorable immediately.
-	if err := seed.Run(gdb); err != nil {
-		log.Printf("seed: %v", err)
+	// Disabled in production by setting SEED_DEMO=false.
+	if os.Getenv("SEED_DEMO") != "false" {
+		if err := seed.Run(gdb); err != nil {
+			log.Printf("seed: %v", err)
+		}
 	}
 
 	r := router.New(gdb, cfg)

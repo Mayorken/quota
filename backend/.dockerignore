@@ -1,0 +1,6 @@
+*.db
+*.db-journal
+.env
+server
+server.exe
+tmp/

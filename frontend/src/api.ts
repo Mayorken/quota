@@ -1,5 +1,10 @@
 // Thin fetch wrapper that attaches the JWT and parses JSON errors.
 
+// In dev this is empty, so requests go to "/api" and Vite's proxy forwards to
+// the local backend. In production (Vercel) set VITE_API_BASE_URL to the
+// deployed backend origin, e.g. https://quota-backend.onrender.com.
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
 const TOKEN_KEY = "quota_token";
 
 export function getToken(): string | null {
@@ -30,7 +35,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(`${API_BASE}/api${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,

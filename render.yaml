@@ -1,0 +1,31 @@
+# Render blueprint: Go backend (Docker) + managed Postgres.
+# Deploy by creating a new "Blueprint" in the Render dashboard pointed at this repo.
+services:
+  - type: web
+    name: quota-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Random, Render-generated signing secret (never commit a real one).
+      - key: JWT_SECRET
+        generateValue: true
+      # Wired automatically from the database below.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quota-db
+          property: connectionString
+      # Don't seed the demo org in production.
+      - key: SEED_DEMO
+        value: "false"
+      # Set these in the dashboard after the frontend is deployed:
+      - key: CORS_ORIGIN
+        sync: false # e.g. https://quota.vercel.app
+      - key: GOOGLE_CLIENT_ID
+        sync: false # optional; enables Google sign-in
+
+databases:
+  - name: quota-db
+    plan: free

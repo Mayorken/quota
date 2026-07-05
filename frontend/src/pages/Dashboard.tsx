@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, DashboardResponse, RepResult } from "../api";
+import { api, API_BASE, DashboardResponse, RepResult } from "../api";
 import { useAuth, isManager } from "../auth";
 import { money, pct, shortDate } from "../format";
 import ProgressBar from "../components/ProgressBar";
@@ -32,7 +32,7 @@ export default function Dashboard() {
   function downloadCSV() {
     const token = localStorage.getItem("quota_token");
     const q = date ? `?date=${date}` : "";
-    fetch(`/api/export/commissions.csv${q}`, {
+    fetch(`${API_BASE}/api/export/commissions.csv${q}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.blob())
