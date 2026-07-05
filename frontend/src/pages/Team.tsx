@@ -135,7 +135,7 @@ export default function Team() {
                     ))}
                   </select>
                 ) : (
-                  <span className="muted">\u2014</span>
+                  <span className="muted">{"\u2014"}</span>
                 )}
               </td>
             </tr>
