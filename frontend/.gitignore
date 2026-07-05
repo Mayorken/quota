@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+*.local
+
+# TS build artifacts (emitted by `tsc -b` for the composite node config)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

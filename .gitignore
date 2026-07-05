@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+*.exe
+
+# Local DB / secrets
+*.db
+*.db-journal
+.env
+
+# Editor / OS
+.DS_Store
+Thumbs.db
