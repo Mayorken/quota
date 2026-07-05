@@ -8,7 +8,6 @@ export default function Deals() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  // Form state.
   const [repId, setRepId] = useState("");
   const [amount, setAmount] = useState("");
   const [dealType, setDealType] = useState("new");
@@ -57,9 +56,21 @@ export default function Deals() {
   return (
     <div>
       <div className="page-head">
-        <h2>Deals</h2>
+        <div>
+          <h2>Deals</h2>
+          <p className="muted">{deals.length} deal{deals.length !== 1 ? "s" : ""} recorded</p>
+        </div>
         <button className="btn primary" onClick={() => setShowForm((s) => !s)}>
-          {showForm ? "Cancel" : "+ Add deal"}
+          {showForm ? (
+            "Cancel"
+          ) : (
+            <>
+              <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add Deal
+            </>
+          )}
         </button>
       </div>
 
@@ -86,15 +97,16 @@ export default function Deals() {
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              placeholder="50,000"
               required
             />
           </div>
           <div className="field">
             <label>Deal type</label>
             <select value={dealType} onChange={(e) => setDealType(e.target.value)}>
-              <option value="new">new</option>
-              <option value="expansion">expansion</option>
-              <option value="renewal">renewal</option>
+              <option value="new">New business</option>
+              <option value="expansion">Expansion</option>
+              <option value="renewal">Renewal</option>
             </select>
           </div>
           <div className="field">
@@ -107,7 +119,7 @@ export default function Deals() {
             />
           </div>
           <button className="btn primary" type="submit">
-            Save
+            Save Deal
           </button>
         </form>
       )}
@@ -118,21 +130,21 @@ export default function Deals() {
             <th>Rep</th>
             <th className="num">Amount</th>
             <th>Type</th>
-            <th>Close date</th>
-            <th></th>
+            <th>Close Date</th>
+            <th className="num" style={{ width: 80 }}></th>
           </tr>
         </thead>
         <tbody>
           {deals.map((d) => (
             <tr key={d.id}>
-              <td>{d.rep?.name ?? d.rep_id}</td>
-              <td className="num">{money(d.amount)}</td>
+              <td style={{ fontWeight: 500 }}>{d.rep?.name ?? d.rep_id}</td>
+              <td className="num" style={{ fontWeight: 600 }}>{money(d.amount)}</td>
               <td>
-                <span className="pill">{d.deal_type || "—"}</span>
+                <span className="pill">{d.deal_type || "\u2014"}</span>
               </td>
               <td>{shortDate(d.close_date)}</td>
               <td className="num">
-                <button className="btn ghost small" onClick={() => remove(d.id)}>
+                <button className="btn ghost small danger" onClick={() => remove(d.id)}>
                   Delete
                 </button>
               </td>
@@ -140,8 +152,8 @@ export default function Deals() {
           ))}
           {deals.length === 0 && (
             <tr>
-              <td colSpan={5} className="muted center">
-                No deals yet. Add one to see attainment update.
+              <td colSpan={5} className="muted center" style={{ padding: "32px 16px" }}>
+                No deals recorded yet. Add one to see attainment update in real time.
               </td>
             </tr>
           )}

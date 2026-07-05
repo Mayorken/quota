@@ -17,13 +17,17 @@ export default function RepDetail() {
   }, [id]);
 
   if (error) return <div className="error">{error}</div>;
-  if (!r) return <div className="muted">Loading…</div>;
+  if (!r) return <div className="muted" style={{ padding: "40px 0" }}>Loading...</div>;
 
   return (
     <div>
       <Link to="/" className="back-link">
-        ← Back to dashboard
+        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+          <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+        </svg>
+        Back to dashboard
       </Link>
+
       <div className="page-head">
         <div>
           <h2>{r.rep_name}</h2>
@@ -32,7 +36,9 @@ export default function RepDetail() {
       </div>
 
       {!r.has_plan ? (
-        <div className="empty-card">This rep has no active comp plan.</div>
+        <div className="empty-card">
+          This rep has no active comp plan. Assign one on the Team page.
+        </div>
       ) : (
         <>
           <div className="detail-head-card">
@@ -43,7 +49,7 @@ export default function RepDetail() {
             <div className="dh-item">
               <div className="muted">Period</div>
               <div className="dh-value">
-                {shortDate(r.period_start)} – {shortDate(r.period_end)}
+                {shortDate(r.period_start)} - {shortDate(r.period_end)}
               </div>
             </div>
             <div className="dh-item">
@@ -51,7 +57,7 @@ export default function RepDetail() {
               <div className="dh-value">{pct(r.attainment_pct)}</div>
             </div>
             <div className="dh-item highlight">
-              <div className="muted">Commission owed</div>
+              <div className="muted">Commission Owed</div>
               <div className="dh-value">{money2(r.commission_owed)}</div>
             </div>
           </div>
@@ -60,32 +66,32 @@ export default function RepDetail() {
             <ProgressBar pct={r.attainment_pct} />
             <div className="bar-labels">
               <span>{money(r.attained)} attained</span>
-              <span className="muted">quota {money(r.quota)}</span>
+              <span>{money(r.quota)} quota</span>
             </div>
           </div>
 
-          <h3>How this was calculated</h3>
-          <p className="muted">
-            Every rep and manager sees this exact math — no hidden spreadsheet formulas.
+          <h3 style={{ marginBottom: 4 }}>Commission Breakdown</h3>
+          <p className="muted" style={{ marginBottom: 16 }}>
+            Transparent, line-by-line math visible to reps and managers alike.
           </p>
 
           <div className="calc-summary">
             <Row label="Total revenue closed" value={money2(r.breakdown.total_revenue)} />
             {r.breakdown.credited_revenue !== r.breakdown.total_revenue && (
               <Row
-                label="Credited revenue (after deal-type multipliers)"
+                label="Credited revenue (after multipliers)"
                 value={money2(r.breakdown.credited_revenue)}
               />
             )}
             <Row label="Deals closed" value={String(r.breakdown.deal_count)} />
-            <Row label="Quota" value={money2(r.breakdown.quota)} />
+            <Row label="Quota target" value={money2(r.breakdown.quota)} />
           </div>
 
-          <table className="calc-table">
+          <table className="calc-table" style={{ marginTop: 16 }}>
             <thead>
               <tr>
                 <th>Tier</th>
-                <th className="num">Revenue in band</th>
+                <th className="num">Revenue in Band</th>
                 <th className="num">Rate</th>
                 <th className="num">Commission</th>
               </tr>
@@ -102,7 +108,7 @@ export default function RepDetail() {
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3}>Total commission</td>
+                <td colSpan={3}>Total Commission</td>
                 <td className="num total">{money2(r.breakdown.total_commission)}</td>
               </tr>
             </tfoot>
