@@ -57,7 +57,9 @@ export default function Login() {
         <div className="auth-brand">
           <span className="brand-mark big">Q</span>
           <h1>Quota</h1>
-          <p className="muted">Commission & quota tracking your reps actually trust.</p>
+          <p className="muted">
+            Commission tracking your sales team actually trusts.
+          </p>
         </div>
 
         <div className="tabs">
@@ -79,9 +81,19 @@ export default function Login() {
           {mode === "signup" && (
             <>
               <label>Company name</label>
-              <input value={orgName} onChange={(e) => setOrgName(e.target.value)} required />
+              <input
+                value={orgName}
+                onChange={(e) => setOrgName(e.target.value)}
+                placeholder="Acme Inc."
+                required
+              />
               <label>Your name</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Smith"
+                required
+              />
             </>
           )}
           <label>Email</label>
@@ -89,6 +101,7 @@ export default function Login() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com"
             required
           />
           <label>Password</label>
@@ -96,6 +109,7 @@ export default function Login() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Min. 8 characters"
             required
             minLength={8}
           />
@@ -103,14 +117,18 @@ export default function Login() {
           {error && <div className="error">{error}</div>}
 
           <button className="btn primary full" type="submit" disabled={busy}>
-            {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
+            {busy
+              ? "Please wait..."
+              : mode === "login"
+                ? "Sign in"
+                : "Create account"}
           </button>
         </form>
 
         <GoogleButton onCredential={handleGoogle} />
 
         <button className="btn link full" onClick={fillDemo} type="button">
-          Use demo account (demo@quota.app)
+          Use demo account
         </button>
       </div>
     </div>
