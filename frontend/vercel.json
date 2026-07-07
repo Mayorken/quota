@@ -3,6 +3,7 @@
     {
       "source": "/api/:path*",
       "destination": "https://quota-backend-kiyb.onrender.com/api/:path*"
-    }
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
