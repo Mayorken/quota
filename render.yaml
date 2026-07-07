@@ -17,9 +17,10 @@ services:
         fromDatabase:
           name: quota-db
           property: connectionString
-      # Don't seed the demo org in production.
+      # Seed the demo org so the app is explorable on first deploy.
+      # Set to "false" once you have real data.
       - key: SEED_DEMO
-        value: "false"
+        value: "true"
       # Set these in the dashboard after the frontend is deployed:
       - key: CORS_ORIGIN
         sync: false # e.g. https://quota.vercel.app
