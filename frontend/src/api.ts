@@ -1,9 +1,11 @@
 // Thin fetch wrapper that attaches the JWT and parses JSON errors.
 
-// In dev this is empty, so requests go to "/api" and Vite's proxy forwards to
-// the local backend. In production (Vercel) set VITE_API_BASE_URL to the
-// deployed backend origin, e.g. https://quota-backend.onrender.com.
-export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+// In dev the base is empty so requests hit "/api" and Vite's proxy forwards
+// them to the local Go backend. In production, VITE_API_BASE_URL can override
+// the default Render backend URL.
+const RENDER_BACKEND = "https://quota-backend-kiyb.onrender.com";
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.PROD ? RENDER_BACKEND : "");
 
 const TOKEN_KEY = "quota_token";
 
