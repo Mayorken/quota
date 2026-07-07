@@ -27,8 +27,7 @@ func New(gdb *gorm.DB, cfg *config.Config) *gin.Engine {
 			if origin == cfg.CORSOrigin {
 				return true
 			}
-			if strings.HasSuffix(origin, "-mayorkens-projects.vercel.app") ||
-				(strings.HasSuffix(origin, ".vercel.app") && strings.Contains(origin, "quota")) {
+			if strings.HasSuffix(origin, "-mayorkens-projects.vercel.app") {
 				return true
 			}
 			return strings.HasPrefix(origin, "http://localhost:") ||
