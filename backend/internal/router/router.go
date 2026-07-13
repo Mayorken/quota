@@ -66,6 +66,9 @@ func New(gdb *gorm.DB, cfg *config.Config) *gin.Engine {
 		authed.GET("/reps/:id/commission", calcH.RepDetail)
 		authed.GET("/deals", dealH.List)
 
+		// Commission snapshots: any authenticated user (reps see only own).
+		authed.GET("/commissions", calcH.ListCommissions)
+
 		// Manager/admin-only management routes.
 		mgr := authed.Group("")
 		mgr.Use(auth.RequireRole(models.RoleManager, models.RoleAdmin))
@@ -85,6 +88,8 @@ func New(gdb *gorm.DB, cfg *config.Config) *gin.Engine {
 
 			mgr.GET("/export/commissions.csv", calcH.ExportCSV)
 			mgr.POST("/reps/:id/finalize", calcH.Finalize)
+			mgr.POST("/commissions/generate", calcH.GenerateForPeriod)
+			mgr.POST("/commissions/:id/transition", calcH.TransitionCommission)
 		}
 	}
 

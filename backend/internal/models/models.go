@@ -28,6 +28,26 @@ const (
 	StatusPaid     = "paid"
 )
 
+// validTransitions maps a status to the set of statuses it may move to.
+// The workflow is draft → approved → paid, with approved → draft allowed to
+// reopen a payout for correction. Paid is terminal.
+var validTransitions = map[string]map[string]bool{
+	StatusDraft:    {StatusApproved: true},
+	StatusApproved: {StatusPaid: true, StatusDraft: true},
+	StatusPaid:     {},
+}
+
+// ValidStatus reports whether s is a known commission status.
+func ValidStatus(s string) bool {
+	_, ok := validTransitions[s]
+	return ok
+}
+
+// CanTransition reports whether a calculation may move from → to.
+func CanTransition(from, to string) bool {
+	return validTransitions[from][to]
+}
+
 // Base embeds a UUID primary key and timestamps shared by every table.
 type Base struct {
 	ID        string         `gorm:"type:varchar(36);primaryKey" json:"id"`
@@ -130,7 +150,13 @@ type CommissionCalculation struct {
 	Breakdown Breakdown `gorm:"serializer:json" json:"breakdown"`
 	Status    string    `gorm:"default:draft" json:"status"`
 
-	Rep *User `gorm:"foreignKey:RepID" json:"rep,omitempty"`
+	// Audit trail for the approval workflow.
+	ApprovedByID string     `gorm:"type:varchar(36)" json:"approved_by_id,omitempty"`
+	ApprovedAt   *time.Time `json:"approved_at,omitempty"`
+	PaidAt       *time.Time `json:"paid_at,omitempty"`
+
+	Rep        *User `gorm:"foreignKey:RepID" json:"rep,omitempty"`
+	ApprovedBy *User `gorm:"foreignKey:ApprovedByID" json:"approved_by,omitempty"`
 }
 
 // Breakdown captures the full computation so reps and managers see identical math.

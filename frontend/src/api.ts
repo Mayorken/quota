@@ -157,3 +157,26 @@ export interface Assignment {
   comp_plan?: CompPlan;
   user?: User;
 }
+
+export type CommissionStatus = "draft" | "approved" | "paid";
+
+export interface CommissionCalculation {
+  id: string;
+  org_id: string;
+  rep_id: string;
+  comp_plan_id: string;
+  period_start: string;
+  period_end: string;
+  quota: number;
+  attained: number;
+  commission_owed: number;
+  breakdown: Breakdown;
+  status: CommissionStatus;
+  approved_by_id?: string;
+  approved_at?: string;
+  paid_at?: string;
+  created_at: string;
+  updated_at: string;
+  rep?: User;
+  approved_by?: User;
+}
