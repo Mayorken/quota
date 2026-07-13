@@ -1062,6 +1062,31 @@ input:hover:not(:focus), select:hover:not(:focus) {
   border-color: rgba(99,102,241,0.15);
 }
 
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.status-draft {
+  background: var(--bg-subtle);
+  color: var(--ink-muted);
+  border-color: var(--border);
+}
+.status-approved {
+  background: var(--amber-light);
+  color: var(--amber);
+}
+.status-paid {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
 /* ==================================================================
    FORMS — INLINE & GRID
    ================================================================== */

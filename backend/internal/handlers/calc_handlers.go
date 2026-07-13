@@ -182,7 +182,53 @@ func (h *CalcHandler) ExportCSV(c *gin.Context) {
 	}
 }
 
-// Finalize persists a snapshot of a rep's commission for a period with a status.
+// snapshotRep creates or refreshes a draft commission snapshot for one rep's
+// active period as of ref. A period that has already been approved or paid is
+// left untouched (its finalized numbers must not silently change), and the
+// existing calc is returned instead. The bool reports whether a row was created.
+func (h *CalcHandler) snapshotRep(orgID string, rep models.User, ref time.Time) (*models.CommissionCalculation, bool, error) {
+	r, err := h.computeRep(orgID, rep, ref)
+	if err != nil {
+		return nil, false, err
+	}
+	if !r.HasPlan {
+		return nil, false, errNoPlan
+	}
+
+	var calc models.CommissionCalculation
+	err = h.DB.Where("org_id = ? AND rep_id = ? AND period_start = ?", orgID, rep.ID, r.PeriodStart).
+		First(&calc).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, false, err
+	}
+	created := err == gorm.ErrRecordNotFound
+
+	// Never overwrite a finalized (approved/paid) snapshot.
+	if !created && calc.Status != models.StatusDraft {
+		return &calc, false, nil
+	}
+
+	calc.OrgID = orgID
+	calc.RepID = rep.ID
+	calc.CompPlanID = r.CompPlanID
+	calc.PeriodStart = r.PeriodStart
+	calc.PeriodEnd = r.PeriodEnd
+	calc.Quota = r.Quota
+	calc.Attained = r.Attained
+	calc.CommissionOwed = r.CommissionOwed
+	calc.Breakdown = r.Breakdown
+	calc.Status = models.StatusDraft
+
+	if err := h.DB.Save(&calc).Error; err != nil {
+		return nil, false, err
+	}
+	return &calc, created, nil
+}
+
+var errNoPlan = fmt.Errorf("rep has no active comp plan")
+
+// Finalize creates or refreshes a draft commission snapshot for a single rep's
+// active period. The snapshot then moves through the approval workflow.
 func (h *CalcHandler) Finalize(c *gin.Context) {
 	orgID := auth.OrgID(c)
 	repID := c.Param("id")
@@ -193,32 +239,124 @@ func (h *CalcHandler) Finalize(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "rep not found"})
 		return
 	}
-	r, err := h.computeRep(orgID, rep, ref)
+	calc, created, err := h.snapshotRep(orgID, rep, ref)
+	if err == errNoPlan {
+		c.JSON(http.StatusBadRequest, gin.H{"error": errNoPlan.Error()})
+		return
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	if !r.HasPlan {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "rep has no active comp plan"})
-		return
+	code := http.StatusOK
+	if created {
+		code = http.StatusCreated
 	}
+	c.JSON(code, calc)
+}
 
-	status := c.DefaultQuery("status", models.StatusApproved)
-	calc := models.CommissionCalculation{
-		OrgID:          orgID,
-		RepID:          rep.ID,
-		CompPlanID:     r.CompPlanID,
-		PeriodStart:    r.PeriodStart,
-		PeriodEnd:      r.PeriodEnd,
-		Quota:          r.Quota,
-		Attained:       r.Attained,
-		CommissionOwed: r.CommissionOwed,
-		Breakdown:      r.Breakdown,
-		Status:         status,
-	}
-	if err := h.DB.Create(&calc).Error; err != nil {
+// GenerateForPeriod snapshots every rep with an active plan for the period as
+// of ?date=, creating draft calculations for the whole team in one call.
+func (h *CalcHandler) GenerateForPeriod(c *gin.Context) {
+	orgID := auth.OrgID(c)
+	ref := parseRef(c)
+
+	var reps []models.User
+	if err := h.DB.Where("org_id = ?", orgID).Order("name").Find(&reps).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, calc)
+
+	calcs := make([]models.CommissionCalculation, 0, len(reps))
+	for _, rep := range reps {
+		calc, _, err := h.snapshotRep(orgID, rep, ref)
+		if err == errNoPlan {
+			continue
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		calcs = append(calcs, *calc)
+	}
+	c.JSON(http.StatusCreated, gin.H{"count": len(calcs), "calculations": calcs})
+}
+
+// ListCommissions returns commission snapshots. Managers see the whole org;
+// reps see only their own. Optional ?status= filters by workflow state.
+func (h *CalcHandler) ListCommissions(c *gin.Context) {
+	orgID := auth.OrgID(c)
+
+	q := h.DB.Preload("Rep").Preload("ApprovedBy").
+		Where("org_id = ?", orgID).
+		Order("period_start desc, created_at desc")
+	if !auth.IsManager(c) {
+		q = q.Where("rep_id = ?", auth.UserID(c))
+	}
+	if s := c.Query("status"); s != "" {
+		q = q.Where("status = ?", s)
+	}
+
+	var calcs []models.CommissionCalculation
+	if err := q.Find(&calcs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, calcs)
+}
+
+type transitionRequest struct {
+	Status string `json:"status" binding:"required"`
+}
+
+// TransitionCommission moves a snapshot between workflow states, enforcing the
+// draft → approved → paid path and recording the audit trail. Manager-only.
+func (h *CalcHandler) TransitionCommission(c *gin.Context) {
+	orgID := auth.OrgID(c)
+
+	var req transitionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if !models.ValidStatus(req.Status) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status"})
+		return
+	}
+
+	var calc models.CommissionCalculation
+	if err := h.DB.Where("org_id = ? AND id = ?", orgID, c.Param("id")).First(&calc).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "commission not found"})
+		return
+	}
+	if !models.CanTransition(calc.Status, req.Status) {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": fmt.Sprintf("cannot move from %s to %s", calc.Status, req.Status),
+		})
+		return
+	}
+
+	now := time.Now()
+	switch req.Status {
+	case models.StatusApproved:
+		uid := auth.UserID(c)
+		calc.ApprovedByID = uid
+		calc.ApprovedAt = &now
+		calc.PaidAt = nil
+	case models.StatusPaid:
+		calc.PaidAt = &now
+	case models.StatusDraft:
+		// Reopening a payout clears the approval audit trail.
+		calc.ApprovedByID = ""
+		calc.ApprovedAt = nil
+		calc.PaidAt = nil
+	}
+	calc.Status = req.Status
+
+	if err := h.DB.Save(&calc).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	h.DB.Preload("Rep").Preload("ApprovedBy").First(&calc, "id = ?", calc.ID)
+	c.JSON(http.StatusOK, calc)
 }

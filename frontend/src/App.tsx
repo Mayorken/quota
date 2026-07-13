@@ -6,6 +6,7 @@ import CompPlans from "./pages/CompPlans";
 import Deals from "./pages/Deals";
 import Team from "./pages/Team";
 import RepDetail from "./pages/RepDetail";
+import Payouts from "./pages/Payouts";
 
 /* ---- SVG icons (inline to avoid a dependency) ---- */
 const Icons = {
@@ -30,6 +31,12 @@ const Icons = {
       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zm8 0a3 3 0 11-6 0 3 3 0 016 0zm-4.07 11c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
     </svg>
   ),
+  payouts: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="nav-icon">
+      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+    </svg>
+  ),
   signout: (
     <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -39,6 +46,7 @@ const Icons = {
 
 const pageTitle: Record<string, string> = {
   "/": "Dashboard",
+  "/payouts": "Payouts",
   "/deals": "Deals",
   "/comp-plans": "Comp Plans",
   "/team": "Team",
@@ -78,6 +86,7 @@ function Sidebar() {
       <nav className="sidebar-nav">
         <div className="sidebar-section">Overview</div>
         {link("/", "Dashboard", Icons.dashboard)}
+        {link("/payouts", "Payouts", Icons.payouts)}
 
         {isManager(user) && (
           <>
@@ -158,6 +167,16 @@ export default function App() {
             <RequireAuth>
               <AuthenticatedLayout>
                 <Dashboard />
+              </AuthenticatedLayout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/payouts"
+          element={
+            <RequireAuth>
+              <AuthenticatedLayout>
+                <Payouts />
               </AuthenticatedLayout>
             </RequireAuth>
           }
