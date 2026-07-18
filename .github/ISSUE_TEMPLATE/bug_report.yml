@@ -1,0 +1,69 @@
+name: Bug report
+description: Report a reproducible problem in Quota
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Quota. Please remove sensitive customer and commission data before submitting.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+      placeholder: A clear, concise description of the issue.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as...
+        2. Open...
+        3. Select...
+        4. Observe...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Dashboard
+        - Deals
+        - Compensation plans
+        - Payouts and calculations
+        - Team management
+        - Authentication
+        - Deployment or infrastructure
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Add the deployed version or commit SHA when known.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include browser, operating system, and whether this occurred locally or in production.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data-safety check
+      options:
+        - label: I removed passwords, tokens, customer data, and confidential commission information.
+          required: true
+
