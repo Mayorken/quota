@@ -8,6 +8,9 @@ disputes.
 
 This repo is the MVP core loop described in the build spec.
 
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for local
+setup, validation, and pull request guidelines.
+
 ## Stack
 
 - **Backend:** Go + Gin, GORM. Postgres in production (Supabase), zero-setup
